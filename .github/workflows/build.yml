@@ -53,7 +53,7 @@ jobs:
     - name: Run test
       run: |
         pip install pytest-cov
-        pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=inheritance_dict timetest.py
+        pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=inheritance_dict typetest.py
     - name: Coveralls
       uses: coverallsapp/github-action@v2
   build:
