@@ -1,3 +1,7 @@
+"""
+@coderabbit add documentation
+"""
+
 class InheritanceDict(dict):
     def __getitem__(self, key):
         if isinstance(key, type):
