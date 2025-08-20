@@ -50,6 +50,13 @@ class TypeTest(unittest.TestCase):
             self.inheritance_dict2[complex]
         with self.assertRaises(KeyError):
             self.inheritance_dict["B"]
+        self.assertEqual(None, self.inheritance_dict2.get(object))
+        self.assertEqual(None, self.inheritance_dict2.get(complex))
+        self.assertEqual(None, self.inheritance_dict.get('B'))
+        self.assertEqual(10, self.inheritance_dict2.get(object, 10))
+        self.assertEqual(10, self.inheritance_dict2.get(complex, 10))
+        self.assertEqual(10, self.inheritance_dict.get('B', 10))
+
 
 
 if __name__ == "__main__":
