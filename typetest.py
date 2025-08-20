@@ -60,6 +60,19 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(3, self.inheritance_dict2.get(A))
 
     def test_missing_key(self):
+        """
+        Verify lookup behavior for keys that are not present.
+        
+        Asserts that __getitem__ raises KeyError for missing keys and that get() returns None
+        when no default is provided and returns the supplied default when given.
+        
+        Checks:
+        - self.inheritance_dict2[object] and self.inheritance_dict2[complex] raise KeyError.
+        - self.inheritance_dict["B"] raises KeyError.
+        - get(object) and get(complex) on inheritance_dict2 return None.
+        - get("B") on inheritance_dict returns None.
+        - get(..., 10) returns 10 for the same missing keys.
+        """
         with self.assertRaises(KeyError):
             self.inheritance_dict2[object]
         with self.assertRaises(KeyError):

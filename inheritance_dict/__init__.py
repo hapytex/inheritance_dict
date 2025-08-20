@@ -1,12 +1,12 @@
 class InheritanceDict(dict):
     def __getitem__(self, key):
         """
-        Return the value associated with a key, resolving class inheritance for type keys.
+        Return the mapping value for key, resolving class inheritance when key is a type.
         
-        If `key` is a class (a `type`), this looks up values for each class in the key's method resolution order (MRO) and returns the first found mapping value. If `key` is not a class, it is used directly as the lookup key.
+        If key is a class (type), this searches the class's method resolution order (key.__mro__) and returns the first mapped value found for any class in that order. If key is not a class, it is used directly for a normal lookup.
         
         Parameters:
-            key: The lookup key. If a `type`, the MRO (key.__mro__) is searched in order; otherwise `key` itself is used.
+            key: Lookup key. When a type is provided, its MRO is searched in order.
         
         Returns:
             The mapped value for the first matching key.
