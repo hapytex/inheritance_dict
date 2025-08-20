@@ -13,11 +13,11 @@ class TypeTest(unittest.TestCase):
     def setUpClass(cls):
         """
         Prepare shared InheritanceDict fixtures for the test class.
-        
+
         Creates two class-level InheritanceDict instances:
         - inheritance_dict: mapping object->1, int->2, str->3, "a"->4
         - inheritance_dict2: mapping int->2, str->3, "a"->4
-        
+
         These fixtures are used by the tests to verify exact-type lookups and MRO-based resolution.
         """
         super().setUpClass()
@@ -27,7 +27,7 @@ class TypeTest(unittest.TestCase):
     def test_exact_type(self):
         """
         Verify that InheritanceDict returns values for exact key types (and string keys) via both item access and .get().
-        
+
         Asserts that:
         - For `self.inheritance_dict`, exact-type lookups yield 1 for `object`, 2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
         - For `self.inheritance_dict2` (which lacks an `object` mapping), exact-type lookups yield 2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
@@ -68,11 +68,10 @@ class TypeTest(unittest.TestCase):
             self.inheritance_dict["B"]
         self.assertEqual(None, self.inheritance_dict2.get(object))
         self.assertEqual(None, self.inheritance_dict2.get(complex))
-        self.assertEqual(None, self.inheritance_dict.get('B'))
+        self.assertEqual(None, self.inheritance_dict.get("B"))
         self.assertEqual(10, self.inheritance_dict2.get(object, 10))
         self.assertEqual(10, self.inheritance_dict2.get(complex, 10))
-        self.assertEqual(10, self.inheritance_dict.get('B', 10))
-
+        self.assertEqual(10, self.inheritance_dict.get("B", 10))
 
 
 if __name__ == "__main__":
