@@ -81,7 +81,7 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(4, len(self.inheritance_dict))
         self.assertEqual(2, self.inheritance_dict.setdefault(bool, 5))
         self.assertEqual(4, len(self.inheritance_dict))
-        
+
         self.assertEqual(3, len(self.inheritance_dict2))
         self.assertEqual(5, self.inheritance_dict2.setdefault(object, 5))
         self.assertEqual(2, self.inheritance_dict2.setdefault(int, 5))
@@ -92,7 +92,7 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(4, len(self.inheritance_dict2))
 
     def test_repr(self):
-        self.assertEqual('InheritanceDict({})', repr(InheritanceDict({})))
+        self.assertEqual("InheritanceDict({})", repr(InheritanceDict({})))
 
 
 if __name__ == "__main__":

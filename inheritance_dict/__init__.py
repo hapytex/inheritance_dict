@@ -54,4 +54,4 @@ class InheritanceDict(dict):
             return default
 
     def __repr__(self):
-        return f'InheritanceDict({super().__repr__()})'
+        return f"InheritanceDict({super().__repr__()})"
