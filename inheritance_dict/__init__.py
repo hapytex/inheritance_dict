@@ -45,3 +45,13 @@ class InheritanceDict(dict):
             return self[key]
         except KeyError:
             return default
+
+    def setdefault(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            self[key] = default
+            return default
+
+    def __repr__(self):
+        return f'InheritanceDict({super().__repr__()})'
