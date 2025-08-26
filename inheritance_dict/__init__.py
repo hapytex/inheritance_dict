@@ -77,10 +77,43 @@ class InheritanceDict(dict):
 
     def __repr__(self):
         """
-        Return the canonical string representation of the InheritanceDict.
+        Return a canonical string representation of the mapping.
+
+        The format is "<ClassName>(<dict-repr>)", where <ClassName> is the runtime class
+        name (e.g., "InheritanceDict" or a subclass) and <dict-repr> is the underlying
+        dictionary's repr() value.
 
         Returns:
-            str: A representation in the form "InheritanceDict(<dict-repr>)", where <dict-repr> is
-                 the underlying dict's repr.
+            str: The formatted representation.
         """
-        return f"InheritanceDict({super().__repr__()})"
+        return f"{type(self).__name__}({super().__repr__()})"
+
+
+class TypeConvertingInheritanceDict(InheritanceDict):
+    """
+    A variant of InheritanceDict that, on a missing direct lookup for non-type keys,
+    retries the lookup using the key's type and resolves via that type's MRO.
+    """
+
+    def __getitem__(self, key):
+        """
+        Return the value for key, resolving non-type keys by their type if needed.
+
+        Attempts a direct lookup for key; if that raises KeyError and key is not a type, retries
+        using type(key). If a mapping for the key (or its type) is found, returns the
+        corresponding value; otherwise the original KeyError is propagated.
+
+        Parameters:
+            key: The lookup key. If an instance is provided and no exact mapping exists, its
+            type will be used for a second lookup.
+
+        Returns:
+            The value associated with the key or with its type.
+        """
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            if not isinstance(key, type):
+                key = type(key)
+                return super().__getitem__(key)
+            raise

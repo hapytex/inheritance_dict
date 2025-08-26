@@ -31,3 +31,19 @@ It thus for each type tries to find the value that is associated with the most s
 The main application is making mappings between types. For example, in Django the mapping between model fields, and serializer fields, resource fields, etc. is often done through such pattern. We thus aim to encapsulate the logic.
 
 The dictionary can also contain non-type items. For lookups with keys where the key is not a type, it will try to lookup the key, just like it normally does.
+
+The package also provides a `TypeConvertingInheritanceDict` which will, if the key is not found, and the key is not a type itself, try a second time with the type of the object. So if we have:
+
+```
+from inheritance_dict import TypeConvertingInheritanceDict
+
+example2 = TypeConvertingInheritanceDict({object: 1, int: 2})
+```
+
+we can query with:
+
+```
+example2['A']   # 1
+example2[0+1j]  # 1
+example2[3]     # 2
+```
