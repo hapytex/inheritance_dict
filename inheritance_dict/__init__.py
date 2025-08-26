@@ -87,6 +87,9 @@ class InheritanceDict(dict):
 
 
 class TypeConvertingInheritanceDict(InheritanceDict):
+    """
+    @coderabbitai generate docstrings
+    """
     def __getitem__(self, key):
         try:
             return super().__getitem__(key)
