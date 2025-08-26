@@ -12,13 +12,15 @@ class TypeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Prepare shared InheritanceDict fixtures for the test class.
-
-        Creates two class-level InheritanceDict instances:
-        - inheritance_dict: mapping object->1, int->2, str->3, "a"->4
-        - inheritance_dict2: mapping int->2, str->3, "a"->4
-
-        These fixtures are used by the tests to verify exact-type lookups and MRO-based resolution.
+        Set up shared InheritanceDict and TypeConvertingInheritanceDict fixtures for the test class.
+        
+        Creates four class-level fixtures used by tests:
+        - inheritance_dict: InheritanceDict mapping {object: 1, int: 2, str: 3, "a": 4}
+        - inheritance_dict2: InheritanceDict mapping {int: 2, str: 3, "a": 4}
+        - type_converting_inheritance_dict: TypeConvertingInheritanceDict mapping {object: 1, int: 2, str: 3, "a": 4}
+        - type_converting_inheritance_dict2: TypeConvertingInheritanceDict mapping {int: 2, str: 3, "a": 4}
+        
+        These fixtures are reused across tests to verify exact-type lookups, MRO-based resolution, missing-key behavior, setdefault semantics, and repr formatting.
         """
         super().setUpClass()
         cls.inheritance_dict = InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
@@ -68,6 +70,16 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(4, self.type_converting_inheritance_dict2.get("a"))
 
     def test_mro_walk(self):
+        """
+        Verify that lookups follow Python method resolution order (MRO) when exact keys are absent.
+        
+        This test asserts that values are resolved via ancestor types for InheritanceDict and
+        TypeConvertingInheritanceDict fixtures. It checks MRO-based resolution for:
+        - complex resolving to object mapping,
+        - bool resolving to int mapping,
+        - A (subclass of str) resolving to str mapping,
+        using both __getitem__ and .get() on the four fixtures set up in setUpClass.
+        """
         self.assertEqual(1, self.inheritance_dict[complex])
         self.assertEqual(2, self.inheritance_dict[bool])
         self.assertEqual(3, self.inheritance_dict[A])
