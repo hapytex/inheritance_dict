@@ -78,11 +78,11 @@ class InheritanceDict(dict):
     def __repr__(self):
         """
         Return a canonical string representation of the mapping.
-        
+
         The format is "<ClassName>(<dict-repr>)", where <ClassName> is the runtime class
         name (e.g., "InheritanceDict" or a subclass) and <dict-repr> is the underlying
         dictionary's repr() value.
-        
+
         Returns:
             str: The formatted representation.
         """
@@ -91,17 +91,22 @@ class InheritanceDict(dict):
 
 class TypeConvertingInheritanceDict(InheritanceDict):
     """
-    @coderabbitai generate docstrings
+    A variant of InheritanceDict that, on a missing direct lookup for non-type keys,
+    retries the lookup using the key's type and resolves via that type's MRO.
     """
+
     def __getitem__(self, key):
         """
         Return the value for key, resolving non-type keys by their type if needed.
-        
-        Attempts a direct lookup for key; if that raises KeyError and key is not a type, retries using type(key). If a mapping for the key (or its type) is found, returns the corresponding value; otherwise the original KeyError is propagated.
-        
+
+        Attempts a direct lookup for key; if that raises KeyError and key is not a type, retries
+        using type(key). If a mapping for the key (or its type) is found, returns the
+        corresponding value; otherwise the original KeyError is propagated.
+
         Parameters:
-            key: The lookup key. If an instance is provided and no exact mapping exists, its type will be used for a second lookup.
-        
+            key: The lookup key. If an instance is provided and no exact mapping exists, its
+            type will be used for a second lookup.
+
         Returns:
             The value associated with the key or with its type.
         """

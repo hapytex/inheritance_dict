@@ -32,11 +32,14 @@ class TypeTest(unittest.TestCase):
 
     def test_exact_type(self):
         """
-        Verify that InheritanceDict returns values for exact key types (and string keys) via both item access and .get().
+        Verify that InheritanceDict returns values for exact key types (and string keys) via both
+        item access and .get().
 
         Asserts that:
-        - For `self.inheritance_dict`, exact-type lookups yield 1 for `object`, 2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
-        - For `self.inheritance_dict2` (which lacks an `object` mapping), exact-type lookups yield 2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
+        - For `self.inheritance_dict`, exact-type lookups yield 1 for `object`, 2 for `int`, 3 for
+          `str`, and 4 for `"a"`, using both indexing and `get()`.
+        - For `self.inheritance_dict2` (which lacks an `object` mapping), exact-type lookups yield
+          2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
         """
         self.assertEqual(1, self.inheritance_dict[object])
         self.assertEqual(2, self.inheritance_dict[int])
@@ -69,12 +72,15 @@ class TypeTest(unittest.TestCase):
 
     def test_mro_walk(self):
         """
-        Verify that lookups follow Python's method resolution order (MRO) across both InheritanceDict and TypeConvertingInheritanceDict.
-        
+        Verify that lookups follow Python's method resolution order (MRO) across both
+        InheritanceDict and TypeConvertingInheritanceDict.
+
         Checks that:
-        - For type keys, a mapping for a nearest base class is returned (e.g., complex -> object, bool -> int, A -> str).
+        - For type keys, a mapping for a nearest base class is returned
+          (e.g., complex -> object, bool -> int, A -> str).
         - Both indexing ([]) and .get(...) return the same MRO-resolved values.
-        - Behavior is validated for dictionaries that include an explicit object mapping and for dictionaries missing the object mapping.
+        - Behavior is validated for dictionaries that include an explicit object mapping and
+          for dictionaries missing the object mapping.
         """
         self.assertEqual(1, self.inheritance_dict[complex])
         self.assertEqual(2, self.inheritance_dict[bool])
@@ -100,12 +106,13 @@ class TypeTest(unittest.TestCase):
     def test_missing_key(self):
         """
         Test handling of missing keys for InheritanceDict and TypeConvertingInheritanceDict.
-        
+
         Verifies that:
         - Using [] on a missing key raises KeyError.
         - get(key) returns None when the key is absent.
         - get(key, default) returns the provided default when the key is absent.
-        Also checks TypeConvertingInheritanceDict-specific behavior where string keys may resolve to a mapped type (e.g., "B" resolves to the value for `str`).
+        Also checks TypeConvertingInheritanceDict-specific behavior where string keys may resolve
+        to a mapped type (e.g., "B" resolves to the value for `str`).
         """
         with self.assertRaises(KeyError):
             self.inheritance_dict2[object]
