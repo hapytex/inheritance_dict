@@ -92,18 +92,18 @@ class InheritanceDict(dict):
 class TypeConvertingInheritanceDict(InheritanceDict):
     def __getitem__(self, key):
         """
-        Return the value for `key`. Behaves like the parent InheritanceDict lookup but, on miss for non-type keys, retries the lookup using the key's type.
+        Return the value for `key`, falling back to `type(key)` for non-type keys on a miss.
         
-        If `key` is a type, lookup follows the type MRO (via the parent). If `key` is a non-type and no entry is found for the object itself, this method will attempt the lookup using `type(key)` instead.
+        Performs the normal InheritanceDict lookup (which for type keys walks the type's MRO). If that lookup raises KeyError and the original `key` is not a type, this method will retry the lookup using `type(key)` and return the result if found.
         
         Parameters:
             key: A mapping key or an object whose type may be used for lookup.
         
         Returns:
-            The mapped value for `key` or for `type(key)` if the initial lookup fails.
+            The mapped value for `key`, or for `type(key)` when the initial lookup fails for non-type keys.
         
         Raises:
-            KeyError: If no mapping exists for `key` (or for `type(key)` when applicable).
+            KeyError: If no mapping exists for `key`, and (for non-type keys) no mapping exists for `type(key)`.
         """
         try:
             return super().__getitem__(key)
