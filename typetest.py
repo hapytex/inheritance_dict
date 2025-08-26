@@ -68,6 +68,14 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(4, self.type_converting_inheritance_dict2.get("a"))
 
     def test_mro_walk(self):
+        """
+        Verify that lookups follow Python's method resolution order (MRO) across both InheritanceDict and TypeConvertingInheritanceDict.
+        
+        Checks that:
+        - For type keys, a mapping for a nearest base class is returned (e.g., complex -> object, bool -> int, A -> str).
+        - Both indexing ([]) and .get(...) return the same MRO-resolved values.
+        - Behavior is validated for dictionaries that include an explicit object mapping and for dictionaries missing the object mapping.
+        """
         self.assertEqual(1, self.inheritance_dict[complex])
         self.assertEqual(2, self.inheritance_dict[bool])
         self.assertEqual(3, self.inheritance_dict[A])
@@ -90,6 +98,15 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(3, self.type_converting_inheritance_dict2.get(A))
 
     def test_missing_key(self):
+        """
+        Test handling of missing keys for InheritanceDict and TypeConvertingInheritanceDict.
+        
+        Verifies that:
+        - Using [] on a missing key raises KeyError.
+        - get(key) returns None when the key is absent.
+        - get(key, default) returns the provided default when the key is absent.
+        Also checks TypeConvertingInheritanceDict-specific behavior where string keys may resolve to a mapped type (e.g., "B" resolves to the value for `str`).
+        """
         with self.assertRaises(KeyError):
             self.inheritance_dict2[object]
         with self.assertRaises(KeyError):
