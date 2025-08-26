@@ -83,4 +83,15 @@ class InheritanceDict(dict):
             str: A representation in the form "InheritanceDict(<dict-repr>)", where <dict-repr> is
                  the underlying dict's repr.
         """
-        return f"InheritanceDict({super().__repr__()})"
+        return f"{type(self).__name__}({super().__repr__()})"
+
+
+class TypeConvertingInheritanceDict(InheritanceDict):
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            if not isinstance(key, type):
+                key = type(key)
+                return super().__getitem__(key)
+            raise
