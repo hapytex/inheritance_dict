@@ -1,12 +1,13 @@
-from collections.abc import Iterable
-
-
-__all__ = ["InheritanceDict", "TypeConvertingInheritanceDict"]
-
 """
 The module defines an InheritanceDict, which is a dictionary, but for lookups where the key is a
 type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
+
+
+from collections.abc import Iterable
+
+
+__all__ = ["InheritanceDict", "TypeConvertingInheritanceDict"]
 
 MISSING = object()
 
