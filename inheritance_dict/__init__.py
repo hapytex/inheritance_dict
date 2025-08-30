@@ -3,6 +3,8 @@ The module defines an InheritanceDict, which is a dictionary, but for lookups wh
 type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
 
+MISSING = object()
+
 
 class InheritanceDict(dict):
     """
@@ -32,10 +34,9 @@ class InheritanceDict(dict):
         using `key`. Raises KeyError if no matching mapping exists.
         """
         for item in self._get_keys(key):
-            try:
-                return super().__getitem__(item)
-            except KeyError:
-                pass
+            result = super().get(item, MISSING)
+            if result is not MISSING:
+                return result
         raise KeyError(key)
 
     def get(self, key, default=None):
