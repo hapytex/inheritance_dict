@@ -3,6 +3,13 @@ The module defines an InheritanceDict, which is a dictionary, but for lookups wh
 type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
 
+from collections.abc import Iterable
+
+
+__all__ = ["InheritanceDict", "TypeConvertingInheritanceDict"]
+
+MISSING = object()
+
 
 class InheritanceDict(dict):
     """
@@ -11,33 +18,30 @@ class InheritanceDict(dict):
     type.
     """
 
-    def __getitem__(self, key):
+    def _get_keys(self, key) -> Iterable[object]:
         """
-        Return the value associated with a key, resolving class inheritance for type keys.
+        Yield lookup candidate keys.
 
-        If `key` is a class (a `type`), this looks up values for each class in the key's
-        method resolution order (MRO) and returns the first found mapping value.
-        If `key` is not a class, it is used directly as the lookup key.
-
-        Parameters:
-            key: The lookup key. If a `type`, the MRO (key.__mro__) is searched in order;
-            otherwise `key` itself is used.
-
-        Returns:
-            The mapped value for the first matching key.
-
-        Raises:
-            KeyError: If no matching key is found.
+        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
+        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
+        dictionary lookups that support type-based inheritance resolution.
         """
         if isinstance(key, type):
-            items = key.__mro__
-        else:
-            items = (key,)
-        for item in items:
-            try:
-                return super().__getitem__(item)
-            except KeyError:
-                pass
+            return key.__mro__
+        return (key,)
+
+    def __getitem__(self, key):
+        """
+        Return the value for `key`, using type inheritance when appropriate.
+
+        If `key` is a type, this performs lookups in the key's MRO (key.__mro__) in order and
+        returns the first mapped value found. If `key` is not a type, it performs a direct lookup
+        using `key`. Raises KeyError if no matching mapping exists.
+        """
+        for item in self._get_keys(key):
+            result = super().get(item, MISSING)
+            if result is not MISSING:
+                return result
         raise KeyError(key)
 
     def get(self, key, default=None):
@@ -95,25 +99,22 @@ class TypeConvertingInheritanceDict(InheritanceDict):
     retries the lookup using the key's type and resolves via that type's MRO.
     """
 
-    def __getitem__(self, key):
+    def _get_keys(self, key):
         """
-        Return the value for key, resolving non-type keys by their type if needed.
+        Yield candidate lookup keys for a given key, extending the base behavior by including the
+        key's type MRO for non-type keys.
 
-        Attempts a direct lookup for key; if that raises KeyError and key is not a type, retries
-        using type(key). If a mapping for the key (or its type) is found, returns the
-        corresponding value; otherwise the original KeyError is propagated.
+        For non-type keys, yields the candidates produced by the superclass
+        (_e.g., the key itself_), followed by the method resolution order (MRO) of type(key).
+        For keys that are types, yields only the superclass candidates (typically the type's MRO).
 
         Parameters:
-            key: The lookup key. If an instance is provided and no exact mapping exists, its
-            type will be used for a second lookup.
+            key: The lookup key. If `key` is not a `type`, this generator will include the MRO of
+            `type(key)` after the superclass candidates.
 
-        Returns:
-            The value associated with the key or with its type.
+        Yields:
+            Candidate keys (types or other keys) in the order they should be tried for lookup.
         """
-        try:
-            return super().__getitem__(key)
-        except KeyError:
-            if not isinstance(key, type):
-                key = type(key)
-                return super().__getitem__(key)
-            raise
+        yield from super()._get_keys(key)
+        if not isinstance(key, type):
+            yield from type(key).__mro__
