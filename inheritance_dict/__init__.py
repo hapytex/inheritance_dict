@@ -13,9 +13,9 @@ class InheritanceDict(dict):
 
     def _get_keys(self, key):
         if isinstance(key, type):
-            yield from key.__mro__
+            return key.__mro__
         else:
-            yield key
+            return (key,)
 
     def __getitem__(self, key):
         """
@@ -98,9 +98,6 @@ class TypeConvertingInheritanceDict(InheritanceDict):
     """
 
     def _get_keys(self, key):
-        result = super()._get_keys(key)
+        yield from super()._get_keys(key)
         if not isinstance(key, type):
-            yield from result
             yield from type(key).__mro__
-        else:
-            yield from result
