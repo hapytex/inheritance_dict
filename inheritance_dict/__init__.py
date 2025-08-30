@@ -12,6 +12,13 @@ class InheritanceDict(dict):
     """
 
     def _get_keys(self, key):
+        """
+        Yield lookup candidate keys.
+        
+        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in order;
+        otherwise yields the key itself. Used to produce the sequence of keys to try for dictionary
+        lookups that support type-based inheritance resolution.
+        """
         if isinstance(key, type):
             return key.__mro__
         else:
@@ -19,21 +26,11 @@ class InheritanceDict(dict):
 
     def __getitem__(self, key):
         """
-        Return the value associated with a key, resolving class inheritance for type keys.
-
-        If `key` is a class (a `type`), this looks up values for each class in the key's
-        method resolution order (MRO) and returns the first found mapping value.
-        If `key` is not a class, it is used directly as the lookup key.
-
-        Parameters:
-            key: The lookup key. If a `type`, the MRO (key.__mro__) is searched in order;
-            otherwise `key` itself is used.
-
-        Returns:
-            The mapped value for the first matching key.
-
-        Raises:
-            KeyError: If no matching key is found.
+        Return the value for `key`, using type inheritance when appropriate.
+        
+        If `key` is a type, this performs lookups in the key's MRO (key.__mro__) in order and
+        returns the first mapped value found. If `key` is not a type, it performs a direct lookup
+        using `key`. Raises KeyError if no matching mapping exists.
         """
         for item in self._get_keys(key):
             try:
@@ -98,6 +95,17 @@ class TypeConvertingInheritanceDict(InheritanceDict):
     """
 
     def _get_keys(self, key):
+        """
+        Yield candidate lookup keys for a given key, extending the base behavior by including the key's type MRO for non-type keys.
+        
+        For non-type keys, yields the candidates produced by the superclass (_e.g., the key itself_), followed by the method resolution order (MRO) of type(key). For keys that are types, yields only the superclass candidates (typically the type's MRO).
+        
+        Parameters:
+            key: The lookup key. If `key` is not a `type`, this generator will include the MRO of `type(key)` after the superclass candidates.
+        
+        Yields:
+            Candidate keys (types or other keys) in the order they should be tried for lookup.
+        """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
             yield from type(key).__mro__
