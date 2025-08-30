@@ -20,9 +20,9 @@ class InheritanceDict(dict):
         lookups that support type-based inheritance resolution.
         """
         if isinstance(key, type):
-            yield from key.__mro__
+            return key.__mro__
         else:
-            yield key
+            return (key,)
 
     def __getitem__(self, key):
         """
@@ -106,9 +106,6 @@ class TypeConvertingInheritanceDict(InheritanceDict):
         Yields:
             Candidate keys (types or other keys) in the order they should be tried for lookup.
         """
-        result = super()._get_keys(key)
+        yield from super()._get_keys(key)
         if not isinstance(key, type):
-            yield from result
             yield from type(key).__mro__
-        else:
-            yield from result
