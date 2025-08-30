@@ -11,6 +11,12 @@ class InheritanceDict(dict):
     type.
     """
 
+    def _get_keys(self, key):
+        if isinstance(key, type):
+            yield from key.__mro__
+        else:
+            yield key
+
     def __getitem__(self, key):
         """
         Return the value associated with a key, resolving class inheritance for type keys.
@@ -29,11 +35,7 @@ class InheritanceDict(dict):
         Raises:
             KeyError: If no matching key is found.
         """
-        if isinstance(key, type):
-            items = key.__mro__
-        else:
-            items = (key,)
-        for item in items:
+        for item in self._get_keys(key):
             try:
                 return super().__getitem__(item)
             except KeyError:
@@ -95,25 +97,10 @@ class TypeConvertingInheritanceDict(InheritanceDict):
     retries the lookup using the key's type and resolves via that type's MRO.
     """
 
-    def __getitem__(self, key):
-        """
-        Return the value for key, resolving non-type keys by their type if needed.
-
-        Attempts a direct lookup for key; if that raises KeyError and key is not a type, retries
-        using type(key). If a mapping for the key (or its type) is found, returns the
-        corresponding value; otherwise the original KeyError is propagated.
-
-        Parameters:
-            key: The lookup key. If an instance is provided and no exact mapping exists, its
-            type will be used for a second lookup.
-
-        Returns:
-            The value associated with the key or with its type.
-        """
-        try:
-            return super().__getitem__(key)
-        except KeyError:
-            if not isinstance(key, type):
-                key = type(key)
-                return super().__getitem__(key)
-            raise
+    def _get_keys(self, key):
+        result = super()._get_keys(key)
+        if not isinstance(key, type):
+            yield from result
+            yield from type(key).__mro__
+        else:
+            yield from result
