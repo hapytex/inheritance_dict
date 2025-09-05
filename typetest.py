@@ -1,7 +1,7 @@
 import unittest
 from datetime import date, datetime, time, timedelta
 
-from inheritance_dict import InheritanceDict, TypeConvertingInheritanceDict
+from inheritance_dict import FallbackInheritanceDict, InheritanceDict, TypeConvertingInheritanceDict
 
 
 class A(str):
