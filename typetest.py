@@ -23,6 +23,7 @@ class TypeTest(unittest.TestCase):
         super().setUpClass()
         cls.inheritance_dict = InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
         cls.inheritance_dict2 = InheritanceDict({int: 2, str: 3, "a": 4})
+        cls.inheritance_dict3 = FallbackInheritanceDict({int: 2, str: 3, "a": 4})
         cls.type_converting_inheritance_dict = TypeConvertingInheritanceDict(
             {object: 1, int: 2, str: 3, "a": 4}
         )
@@ -55,6 +56,12 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.inheritance_dict2.get(int))
         self.assertEqual(3, self.inheritance_dict2.get(str))
         self.assertEqual(4, self.inheritance_dict2.get("a"))
+        self.assertEqual(2, self.inheritance_dict3[int, str])
+        self.assertEqual(3, self.inheritance_dict3[str, complex])
+        self.assertEqual(4, self.inheritance_dict3["a", int])
+        self.assertEqual(2, self.inheritance_dict3.get((int, str)))
+        self.assertEqual(3, self.inheritance_dict3.get((str, complex)))
+        self.assertEqual(4, self.inheritance_dict3.get(("a", int)))
         self.assertEqual(1, self.type_converting_inheritance_dict[object])
         self.assertEqual(2, self.type_converting_inheritance_dict[int])
         self.assertEqual(3, self.type_converting_inheritance_dict[str])
