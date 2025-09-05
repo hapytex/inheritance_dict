@@ -5,7 +5,6 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 
 from collections.abc import Iterable
 
-
 __all__ = [
     "concatMap",
     "BaseDict",
@@ -13,7 +12,7 @@ __all__ = [
     "InheritanceDict",
     "FallbackInheritanceDict",
     "TypeConvertingInheritanceDict",
-    "FallbackTypeConvertingInheritanceDict"
+    "FallbackTypeConvertingInheritanceDict",
 ]
 
 MISSING = object()
@@ -124,8 +123,10 @@ class InheritanceDict(BaseDict):
             return concatMap(super()._get_keys, key.__mro__)
         return super()._get_keys(key)
 
+
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
     pass
+
 
 class TypeConvertingInheritanceDict(InheritanceDict):
     """
@@ -152,6 +153,7 @@ class TypeConvertingInheritanceDict(InheritanceDict):
         yield from super()._get_keys(key)
         if not isinstance(key, type):
             yield from super()._get_keys(type(key))
+
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
     pass
