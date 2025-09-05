@@ -12,13 +12,16 @@ class TypeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Prepare shared InheritanceDict fixtures for the test class.
-
-        Creates two class-level InheritanceDict instances:
-        - inheritance_dict: mapping object->1, int->2, str->3, "a"->4
-        - inheritance_dict2: mapping int->2, str->3, "a"->4
-
-        These fixtures are used by the tests to verify exact-type lookups and MRO-based resolution.
+        Set up shared class-level fixtures used by the tests.
+        
+        Creates five fixtures on the test class:
+        - inheritance_dict: InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
+        - inheritance_dict2: InheritanceDict({int: 2, str: 3, "a": 4})
+        - inheritance_dict3: FallbackInheritanceDict({int: 2, str: 3, "a": 4})
+        - type_converting_inheritance_dict: TypeConvertingInheritanceDict({object: 1, int: 2, str: 3, "a": 4})
+        - type_converting_inheritance_dict2: TypeConvertingInheritanceDict({int: 2, str: 3, "a": 4})
+        
+        These fixtures exercise exact-type lookups, MRO-based resolution, fallback multi-key lookups, and type-converting behavior across the test methods.
         """
         super().setUpClass()
         cls.inheritance_dict = InheritanceDict({object: 1, int: 2, str: 3, "a": 4})

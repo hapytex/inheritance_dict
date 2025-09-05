@@ -19,6 +19,19 @@ MISSING = object()
 
 
 def concatMap(func, items):
+    """
+    Yield all elements produced by applying func to each item in items.
+    
+    Parameters:
+        func (Callable[[T], Iterable[U]]): A function that takes an item and returns an iterable of results.
+        items (Iterable[T]): Iterable of input items to map over.
+    
+    Yields:
+        U: Each element from the iterables returned by func for each item, in order.
+    
+    Notes:
+        Equivalent to itertools.chain.from_iterable(map(func, items)). The function `func` must return an iterable for every item.
+    """
     for item in items:
         yield from func(item)
 
@@ -32,21 +45,18 @@ class BaseDict(dict):
 
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Yield lookup candidate keys.
-
-        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
-        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
-        dictionary lookups that support type-based inheritance resolution.
+        Return an iterable of candidate lookup keys for the given key.
+        
+        For the base implementation this yields only the exact key (i.e., a one-tuple containing `key`).
+        Subclasses may override to expand this (for example, to yield a type's MRO or to handle tuple keys).
         """
         return (key,)
 
     def __getitem__(self, key):
         """
-        Return the value for `key`, using type inheritance when appropriate.
-
-        If `key` is a type, this performs lookups in the key's MRO (key.__mro__) in order and
-        returns the first mapped value found. If `key` is not a type, it performs a direct lookup
-        using `key`. Raises KeyError if no matching mapping exists.
+        Return the value for key, resolving through candidate keys produced by _get_keys (for example, a type's MRO).
+        
+        Iterates candidates yielded by self._get_keys(key) and returns the first mapped value found. If no candidate has a mapping, raises KeyError(key).
         """
         for item in self._get_keys(key):
             result = super().get(item, MISSING)
@@ -105,6 +115,19 @@ class BaseDict(dict):
 
 class FallbackMixin:
     def _get_keys(self, key) -> Iterable[object]:
+        """
+        Return candidate lookup keys, expanding tuple keys by concatenating each element's candidates.
+        
+        If `key` is a tuple, this returns a flattened iterable obtained by calling `super()._get_keys`
+        for each element of the tuple and yielding all results in sequence. If `key` is not a tuple,
+        delegates to `super()._get_keys(key)`.
+        
+        Parameters:
+            key: The lookup key which may be a single object or a tuple of objects.
+        
+        Returns:
+            An iterable of candidate keys to try for lookup (may be lazy).
+        """
         if isinstance(key, tuple):
             return concatMap(super()._get_keys, key)
         return super()._get_keys(key)
@@ -113,11 +136,12 @@ class FallbackMixin:
 class InheritanceDict(BaseDict):
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Yield lookup candidate keys.
-
-        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
-        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
-        dictionary lookups that support type-based inheritance resolution.
+        Return an iterable of candidate lookup keys for resolving the given key.
+        
+        If key is a type, yields candidates by walking the type's method resolution order (from the type
+        down through its bases) and applying super()._get_keys to each class; otherwise delegates to
+        super()._get_keys(key). The resulting sequence is intended for use when attempting dictionary
+        lookups that should consider a type's inheritance chain.
         """
         if isinstance(key, type):
             return concatMap(super()._get_keys, key.__mro__)
@@ -136,19 +160,17 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
     def _get_keys(self, key):
         """
-        Yield candidate lookup keys for a given key, extending the base behavior by including the
-        key's type MRO for non-type keys.
-
-        For non-type keys, yields the candidates produced by the superclass
-        (_e.g., the key itself_), followed by the method resolution order (MRO) of type(key).
-        For keys that are types, yields only the superclass candidates (typically the type's MRO).
-
+        Yield candidate lookup keys, including the key's type MRO when the key is not a type.
+        
+        For a type key this delegates to the superclass candidates (typically the type's MRO).
+        For a non-type key it first yields the superclass candidates for the key itself, then
+        yields candidates for type(key) (so lookups can match entries keyed by a value's type or its bases).
+        
         Parameters:
-            key: The lookup key. If `key` is not a `type`, this generator will include the MRO of
-            `type(key)` after the superclass candidates.
-
+            key: The lookup key. If not a `type`, this generator also yields candidates derived from `type(key)`.
+        
         Yields:
-            Candidate keys (types or other keys) in the order they should be tried for lookup.
+            Candidate keys (types or other objects) in the order they should be tried for lookup.
         """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
