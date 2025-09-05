@@ -56,12 +56,12 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.inheritance_dict2.get(int))
         self.assertEqual(3, self.inheritance_dict2.get(str))
         self.assertEqual(4, self.inheritance_dict2.get("a"))
-        self.assertEqual(2, self.inheritance_dict3[int, str])
-        self.assertEqual(3, self.inheritance_dict3[str, complex])
-        self.assertEqual(4, self.inheritance_dict3["a", int])
-        self.assertEqual(2, self.inheritance_dict3.get((int, str)))
-        self.assertEqual(3, self.inheritance_dict3.get((str, complex)))
-        self.assertEqual(4, self.inheritance_dict3.get(("a", int)))
+        self.assertEqual(2, self.inheritance_dict3[int])
+        self.assertEqual(3, self.inheritance_dict3[str])
+        self.assertEqual(4, self.inheritance_dict3["a"])
+        self.assertEqual(2, self.inheritance_dict3.get(int))
+        self.assertEqual(3, self.inheritance_dict3.get(str))
+        self.assertEqual(4, self.inheritance_dict3.get("a"))
         self.assertEqual(1, self.type_converting_inheritance_dict[object])
         self.assertEqual(2, self.type_converting_inheritance_dict[int])
         self.assertEqual(3, self.type_converting_inheritance_dict[str])
@@ -76,6 +76,14 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.type_converting_inheritance_dict2.get(int))
         self.assertEqual(3, self.type_converting_inheritance_dict2.get(str))
         self.assertEqual(4, self.type_converting_inheritance_dict2.get("a"))
+
+    def test_fallback(self):
+        self.assertEqual(2, self.inheritance_dict3[int, str])
+        self.assertEqual(3, self.inheritance_dict3[str, complex])
+        self.assertEqual(4, self.inheritance_dict3["a", int])
+        self.assertEqual(2, self.inheritance_dict3.get((int, str)))
+        self.assertEqual(3, self.inheritance_dict3.get((str, complex)))
+        self.assertEqual(4, self.inheritance_dict3.get(("a", int)))
 
     def test_mro_walk(self):
         """
