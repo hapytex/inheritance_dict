@@ -6,12 +6,25 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 from collections.abc import Iterable
 
 
-__all__ = ["InheritanceDict", "TypeConvertingInheritanceDict"]
+__all__ = [
+    "concatMap",
+    "BaseDict",
+    "FallbackMixin",
+    "InheritanceDict",
+    "FallbackInheritanceDict",
+    "TypeConvertingInheritanceDict",
+    "FallbackTypeConvertingInheritanceDict"
+]
 
 MISSING = object()
 
 
-class InheritanceDict(dict):
+def concatMap(func, items):
+    for item in items:
+        yield from func(item)
+
+
+class BaseDict(dict):
     """
     A dictionary that for type lookups, will walk over the Method Resolution Order (MRO) of that
     type, to find the value for the most specific superclass (including the class itself) of that
@@ -26,8 +39,6 @@ class InheritanceDict(dict):
         order; otherwise yields the key itself. Used to produce the sequence of keys to try for
         dictionary lookups that support type-based inheritance resolution.
         """
-        if isinstance(key, type):
-            return key.__mro__
         return (key,)
 
     def __getitem__(self, key):
@@ -93,6 +104,29 @@ class InheritanceDict(dict):
         return f"{type(self).__name__}({super().__repr__()})"
 
 
+class FallbackMixin:
+    def _get_keys(self, key) -> Iterable[object]:
+        if isinstance(key, tuple):
+            return concatMap(super()._get_keys, key)
+        return super()._get_keys(key)
+
+
+class InheritanceDict(BaseDict):
+    def _get_keys(self, key) -> Iterable[object]:
+        """
+        Yield lookup candidate keys.
+
+        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
+        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
+        dictionary lookups that support type-based inheritance resolution.
+        """
+        if isinstance(key, type):
+            return concatMap(super()._get_keys, key.__mro__)
+        return super()._get_keys(key)
+
+class FallbackInheritanceDict(FallbackMixin, BaseDict):
+    pass
+
 class TypeConvertingInheritanceDict(InheritanceDict):
     """
     A variant of InheritanceDict that, on a missing direct lookup for non-type keys,
@@ -117,4 +151,7 @@ class TypeConvertingInheritanceDict(InheritanceDict):
         """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
-            yield from type(key).__mro__
+            yield from super()._get_keys(type(key))
+
+class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
+    pass
