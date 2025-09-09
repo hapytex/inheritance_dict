@@ -47,3 +47,18 @@ example2['A']   # 1
 example2[0+1j]  # 1
 example2[3]     # 2
 ```
+
+There are also `Fallback` variants of these like `FallbackInheritanceDict` and `FallbackTypeConvertingInheritanceDict`, which allow to query with a tuple of keys, like:
+
+```
+from inheritance_dict import FallbackInheritanceDict
+
+example3 = FallbackInheritanceDict({object: 1, int: 2})
+```
+
+then one can query with:
+
+```
+example3[complex, int]  # 1
+example3[int, complex]  # 2
+```

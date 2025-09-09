@@ -51,7 +51,16 @@ class BaseDict(dict):
         return (key,)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai: generate docstrings"""
+        """
+        Return the key that should be used to store a value.
+        
+        Default implementation returns the original key unchanged (identity). Subclasses may
+        override to normalize or map composite keys (for example, using the first element of a
+        tuple) or otherwise transform the provided key before insertion.
+        
+        Returns:
+            The key to use when writing into the underlying mapping (usually the input `key`).
+        """
         return key
 
     def __getitem__(self, key):
@@ -117,7 +126,15 @@ class BaseDict(dict):
 
 
 class FallbackMixin:  # pylint: disable=too-few-public-methods
-    """@coderabbitai: generate docstrings"""
+    """
+    A mixin that can be added to subclasses of BaseDict: it allows to make lookups with
+    a tuple of items, like:
+
+        mydict[float, int]
+
+    It will try to lookup keys until one of the items is a hit, or raises a KeyError if
+    none result in a hit.
+    """
 
     def _get_keys(self, key) -> Iterable[object]:
         """
@@ -139,14 +156,23 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
         return super()._get_keys(key)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai: generate docstrings"""
+        """
+        If the key is a tuple, return the first item of the tuple, such that
+
+            mydict.setdefault((float, int), 1)
+
+        will assign the value to float, not (float, int)
+        """
         if isinstance(key, tuple) and key:
             return key[0]
         return super()._set_key(key)
 
 
 class InheritanceDict(BaseDict):
-    """@coderabbitai: generate docstrings"""
+    """
+    A dictionary where lookups for a given type will result in a lookup for the entire method-
+    resolution order of the type, until a superclass is a hit.
+    """
 
     def _get_keys(self, key) -> Iterable[object]:
         """
@@ -162,7 +188,10 @@ class InheritanceDict(BaseDict):
 
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
-    """@coderabbitai: generate docstrings"""
+    """
+    A variant of the InheritanceDict where one can use a tuple of multiple keys. Each key can
+    result in extra lookups like MRO for type lookups.
+    """
 
 
 class TypeConvertingInheritanceDict(InheritanceDict):
@@ -192,4 +221,7 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
-    """@coderabbitai: generate docstrings"""
+    """
+    A variant of TypeConvertingInheritanceDict where one can pass a tuple of multple
+    keys. The keys are tried one after another, and some keys can trigger MRO lookups.
+    """
