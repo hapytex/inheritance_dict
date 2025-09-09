@@ -204,6 +204,15 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(5, self.type_converting_inheritance_dict2.setdefault(float, 6))
         self.assertEqual(4, len(self.type_converting_inheritance_dict2))
 
+        self.assertEqual(2, self.inheritance_dict3.setdefault((float, int), 6))
+        self.assertEqual(3, len(self.inheritance_dict3))
+        self.assertEqual(6, self.inheritance_dict3.setdefault((float, complex), 6))
+        self.assertEqual(4, len(self.inheritance_dict3))
+        self.assertEqual(6, self.inheritance_dict3.setdefault(float, 7))
+
+
+
+
     def test_repr(self):
         self.assertEqual("InheritanceDict({})", repr(InheritanceDict({})))
         self.assertEqual(
