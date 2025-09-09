@@ -136,12 +136,9 @@ class FallbackMixin:
 class InheritanceDict(BaseDict):
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Return an iterable of candidate lookup keys for resolving the given key.
+        Return candidate lookup keys for resolving `key`, including its type MRO when appropriate.
         
-        If key is a type, yields candidates by walking the type's method resolution order (from the type
-        down through its bases) and applying super()._get_keys to each class; otherwise delegates to
-        super()._get_keys(key). The resulting sequence is intended for use when attempting dictionary
-        lookups that should consider a type's inheritance chain.
+        If `key` is a type, yields candidates by iterating the type's method resolution order (MRO) in order and applying super()._get_keys to each class; otherwise delegates to super()._get_keys(key). The returned iterable is meant to be consumed by dictionary lookup logic that should consider a type's inheritance chain when resolving a key.
         """
         if isinstance(key, type):
             return concatMap(super()._get_keys, key.__mro__)
@@ -160,14 +157,12 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
     def _get_keys(self, key):
         """
-        Yield candidate lookup keys, including the key's type MRO when the key is not a type.
+        Yield candidate lookup keys for a lookup, including the key's type MRO when the key is not a type.
         
-        For a type key this delegates to the superclass candidates (typically the type's MRO).
-        For a non-type key it first yields the superclass candidates for the key itself, then
-        yields candidates for type(key) (so lookups can match entries keyed by a value's type or its bases).
+        For type keys, delegates to the superclass candidate generator (usually producing that type's MRO). For non-type keys, yields candidates for the exact key first (via the superclass) and then yields candidates derived from type(key) (allowing matches defined for the value's type or its base types).
         
         Parameters:
-            key: The lookup key. If not a `type`, this generator also yields candidates derived from `type(key)`.
+            key: The lookup key. If not a `type`, this generator also yields candidates produced for `type(key)`.
         
         Yields:
             Candidate keys (types or other objects) in the order they should be tried for lookup.
