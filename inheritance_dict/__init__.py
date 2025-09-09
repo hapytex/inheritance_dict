@@ -53,11 +53,11 @@ class BaseDict(dict):
     def _set_key(self, key) -> object:
         """
         Return the key that should be used to store a value.
-        
+
         Default implementation returns the original key unchanged (identity). Subclasses may
         override to normalize or map composite keys (for example, using the first element of a
         tuple) or otherwise transform the provided key before insertion.
-        
+
         Returns:
             The key to use when writing into the underlying mapping (usually the input `key`).
         """
