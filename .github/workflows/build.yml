@@ -5,6 +5,18 @@ permissions:
   id-token: write
 
 jobs:
+  coderabbit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: "! grep -i -P 'coderr?abbit' $(find . -iname '*.py')"
+        name: 'check for coderrabbit'
+  todo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: "! grep -i -P 'TODO|FIXME' $(find . -iname '*.py')"
+        name: 'check for todo'
   black:
     runs-on: ubuntu-latest
     steps:
