@@ -52,17 +52,14 @@ class BaseDict(dict):
 
     def _set_key(self, key) -> object:
         """
-        Return the key to use for storing a value.
+        Return the key that should be used to store a value.
         
-        By default this is the original key (identity). Subclasses may override to
-        map composite keys (e.g., tuples) or otherwise transform the provided key
-        before insertion.
-        
-        Parameters:
-            key: The user-provided key.
+        Default implementation returns the original key unchanged (identity). Subclasses may override
+        to normalize or map composite keys (for example, using the first element of a tuple)
+        or otherwise transform the provided key before insertion.
         
         Returns:
-            The key to use when writing into the underlying dict (usually `key`).
+            The key to use when writing into the underlying mapping (usually the input `key`).
         """
         return key
 
@@ -195,14 +192,12 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
     def _get_keys(self, key):
         """
-        Yield candidate lookup keys for the given lookup key, including a fallback to the key's type.
+        Yield candidate lookup keys for `key`, with an additional fallback to candidates derived from the key's type.
         
-        This yields all candidates from super()._get_keys(key) first. If `key` is not a type, it then yields
-        candidates from super()._get_keys(type(key)), allowing lookups to fall back to the key's type and
-        its MRO-derived candidates after the original candidates.
+        First yields every candidate produced by super()._get_keys(key). If `key` is not a type object, then after those candidates this function yields every candidate produced by super()._get_keys(type(key)), allowing lookups to fall back to the key's type and its MRO-derived candidates.
         
         Parameters:
-            key: The lookup key. Non-type keys cause an additional sequence of candidate keys derived from type(key).
+            key: The lookup key. If `key` is not a type, candidates derived from type(key) are yielded after the original candidates.
         """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
