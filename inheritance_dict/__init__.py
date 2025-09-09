@@ -19,9 +19,9 @@ MISSING = object()
 
 def concat_map(func, items):
     """
-    Yield items from the iterables produced by applying func to each element of items.
-
-    func should be a callable that accepts a single item and returns an iterable; concat_map lazily iterates over items, calls func(item) for each, and yields each element from the resulting iterable in order.
+    Lazily yield elements from iterables produced by applying func to each item in items.
+    
+    func must be a callable that takes a single argument and returns an iterable; for each element in items, concat_map calls func(item) and yields each element from the resulting iterable in order. Evaluation is lazy — neither the results nor the inner iterables are materialized upfront.
     """
     for item in items:
         yield from func(item)
@@ -48,7 +48,17 @@ class BaseDict(dict):
         return (key,)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """
+        Return the object to use as the dictionary storage key for a given lookup key.
+        
+        By default this returns the input key unchanged. Subclasses may override this to
+        map a lookup key to a canonical storage key (for example, a mixin may choose
+        the first element of a non-empty tuple).
+        Parameters:
+            key (object): The original lookup key.
+        Returns:
+            object: The key to use when writing into the underlying dict.
+        """
         return key
 
     def __getitem__(self, key):
@@ -117,25 +127,21 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
 
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Return an iterable of candidate lookup keys, expanding tuple keys by concatenating
-        the candidate sequences for each element.
-
-        If `key` is a tuple, yields all items produced by applying the superclass's
-        `_get_keys` to each element of the tuple (flattened in element order). If `key`
-        is not a tuple, delegates to the superclass's `_get_keys`.
-
-        Parameters:
-            key: The lookup key or a tuple of lookup keys.
-
-        Returns:
-            An iterable of candidate keys to try for dictionary lookup.
+        Yield candidate lookup keys, expanding tuple keys by concatenating candidates for each element.
+        
+        If `key` is a tuple, this returns a lazy sequence that yields every item produced by calling the superclass's `_get_keys` on each element of the tuple (flattened in tuple order). If `key` is not a tuple, delegates directly to the superclass `_get_keys`.
         """
         if isinstance(key, tuple):
             return concat_map(super()._get_keys, key)
         return super()._get_keys(key)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """
+        Return the canonical key used for storing a lookup key.
+        
+        If `key` is a non-empty tuple, the first element of the tuple is used as the storage key.
+        For any other key (including empty tuples), delegates to the superclass's `_set_key`.
+        """
         if isinstance(key, tuple) and key:
             return key[0]
         return super()._set_key(key)
@@ -159,6 +165,8 @@ class InheritanceDict(BaseDict):
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
+
+    pass
 
 
 class TypeConvertingInheritanceDict(InheritanceDict):
@@ -186,3 +194,5 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
+
+    pass
