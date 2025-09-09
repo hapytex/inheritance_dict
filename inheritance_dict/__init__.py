@@ -51,7 +51,7 @@ class BaseDict(dict):
         return (key,)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """@coderabbitai: generate docstrings"""
         return key
 
     def __getitem__(self, key):
@@ -117,7 +117,7 @@ class BaseDict(dict):
 
 
 class FallbackMixin:  # pylint: disable=too-few-public-methods
-    """@coderabbitai generate docstrings"""
+    """@coderabbitai: generate docstrings"""
 
     def _get_keys(self, key) -> Iterable[object]:
         """
@@ -139,14 +139,14 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
         return super()._get_keys(key)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """@coderabbitai: generate docstrings"""
         if isinstance(key, tuple) and key:
             return key[0]
         return super()._set_key(key)
 
 
 class InheritanceDict(BaseDict):
-    """@coderabbitai generate docstrings"""
+    """@coderabbitai: generate docstrings"""
 
     def _get_keys(self, key) -> Iterable[object]:
         """
@@ -162,7 +162,7 @@ class InheritanceDict(BaseDict):
 
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
-    """@coderabbitai generate docstrings"""
+    """@coderabbitai: generate docstrings"""
 
 
 class TypeConvertingInheritanceDict(InheritanceDict):
@@ -192,4 +192,4 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
-    """@coderabbitai generate docstrings"""
+    """@coderabbitai: generate docstrings"""
