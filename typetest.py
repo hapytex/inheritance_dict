@@ -1,7 +1,11 @@
 import unittest
 from datetime import date, datetime, time, timedelta
 
-from inheritance_dict import FallbackInheritanceDict, InheritanceDict, TypeConvertingInheritanceDict
+from inheritance_dict import (
+    FallbackInheritanceDict,
+    InheritanceDict,
+    TypeConvertingInheritanceDict,
+)
 
 
 class A(str):
@@ -13,14 +17,14 @@ class TypeTest(unittest.TestCase):
     def setUpClass(cls):
         """
         Create shared class-level dictionary fixtures used by the tests.
-        
+
         Sets up five fixtures on the test class:
         - inheritance_dict: InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
         - inheritance_dict2: InheritanceDict({int: 2, str: 3, "a": 4})
         - inheritance_dict3: FallbackInheritanceDict({int: 2, str: 3, "a": 4})
         - type_converting_inheritance_dict: TypeConvertingInheritanceDict({object: 1, int: 2, str: 3, "a": 4})
         - type_converting_inheritance_dict2: TypeConvertingInheritanceDict({int: 2, str: 3, "a": 4})
-        
+
         These fixtures are reused across tests to verify exact-type lookups, MRO-based resolution, tuple-key fallbacks, and type-converting behavior.
         """
         super().setUpClass()
