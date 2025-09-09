@@ -6,7 +6,7 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 from collections.abc import Iterable
 
 __all__ = [
-    "concatMap",
+    "concat_map",
     "BaseDict",
     "FallbackMixin",
     "InheritanceDict",
@@ -17,11 +17,11 @@ __all__ = [
 MISSING = object()
 
 
-def concatMap(func, items):
+def concat_map(func, items):
     """
     Yield items from the iterables produced by applying func to each element of items.
 
-    func should be a callable that accepts a single item and returns an iterable; concatMap lazily iterates over items, calls func(item) for each, and yields each element from the resulting iterable in order.
+    func should be a callable that accepts a single item and returns an iterable; concat_map lazily iterates over items, calls func(item) for each, and yields each element from the resulting iterable in order.
     """
     for item in items:
         yield from func(item)
@@ -46,6 +46,11 @@ class BaseDict(dict):
             Iterable[object]: An iterable yielding candidate keys; by default a single-item tuple containing `key`.
         """
         return (key,)
+
+    def _set_key(self, key) -> object:
+        """@coderabbitai generate docstrings"""
+        return key
+
 
     def __getitem__(self, key):
         """
@@ -91,7 +96,7 @@ class BaseDict(dict):
         try:
             return self[key]
         except KeyError:
-            self[key] = default
+            self[self._set_key(key)] = default
             return default
 
     def __repr__(self):
@@ -108,7 +113,7 @@ class BaseDict(dict):
         return f"{type(self).__name__}({super().__repr__()})"
 
 
-class FallbackMixin:
+class FallbackMixin:   # pylint: disable=too-few-public-methods
     """@coderabbitai generate docstrings"""
 
     def _get_keys(self, key) -> Iterable[object]:
@@ -127,8 +132,14 @@ class FallbackMixin:
             An iterable of candidate keys to try for dictionary lookup.
         """
         if isinstance(key, tuple):
-            return concatMap(super()._get_keys, key)
+            return concat_map(super()._get_keys, key)
         return super()._get_keys(key)
+
+    def _set_key(self, key) -> object:
+        """@coderabbitai generate docstrings"""
+        if isinstance(key, tuple) and key:
+            return key[0]
+        return super()._set_key(key)
 
 
 class InheritanceDict(BaseDict):
@@ -143,13 +154,12 @@ class InheritanceDict(BaseDict):
         dictionary lookups that support type-based inheritance resolution.
         """
         if isinstance(key, type):
-            return concatMap(super()._get_keys, key.__mro__)
+            return concat_map(super()._get_keys, key.__mro__)
         return super()._get_keys(key)
 
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
-
     pass
 
 
@@ -178,5 +188,4 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
-
     pass
