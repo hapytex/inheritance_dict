@@ -40,14 +40,16 @@ class TypeTest(unittest.TestCase):
 
     def test_exact_type(self):
         """
-        Verify that InheritanceDict returns values for exact key types (and string keys) via both
-        item access and .get().
-
-        Asserts that:
-        - For `self.inheritance_dict`, exact-type lookups yield 1 for `object`, 2 for `int`, 3 for
-          `str`, and 4 for `"a"`, using both indexing and `get()`.
-        - For `self.inheritance_dict2` (which lacks an `object` mapping), exact-type lookups yield
-          2 for `int`, 3 for `str`, and 4 for `"a"`, using both indexing and `get()`.
+        Verify exact-key lookups return the expected values for all test dictionary fixtures.
+        
+        Checks that direct indexing and .get() return the mapped value for exact type keys and string keys across:
+        - inheritance_dict: object -> 1, int -> 2, str -> 3, "a" -> 4
+        - inheritance_dict2 (no object mapping): int -> 2, str -> 3, "a" -> 4
+        - inheritance_dict3 (FallbackInheritanceDict): int -> 2, str -> 3, "a" -> 4
+        - type_converting_inheritance_dict: object -> 1, int -> 2, str -> 3, "a" -> 4
+        - type_converting_inheritance_dict2 (no object mapping): int -> 2, str -> 3, "a" -> 4
+        
+        Both item access (dict[key]) and dict.get(key) are asserted for each mapping.
         """
         self.assertEqual(1, self.inheritance_dict[object])
         self.assertEqual(2, self.inheritance_dict[int])

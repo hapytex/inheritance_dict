@@ -51,7 +51,19 @@ class BaseDict(dict):
         return (key,)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """
+        Return the key to use for storing a value.
+        
+        By default this is the original key (identity). Subclasses may override to
+        map composite keys (e.g., tuples) or otherwise transform the provided key
+        before insertion.
+        
+        Parameters:
+            key: The user-provided key.
+        
+        Returns:
+            The key to use when writing into the underlying dict (usually `key`).
+        """
         return key
 
     def __getitem__(self, key):
@@ -121,25 +133,35 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
 
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Return an iterable of candidate lookup keys, expanding tuple keys by concatenating
-        the candidate sequences for each element.
-
-        If `key` is a tuple, yields all items produced by applying the superclass's
-        `_get_keys` to each element of the tuple (flattened in element order). If `key`
-        is not a tuple, delegates to the superclass's `_get_keys`.
-
+        Expand tuple keys into a flattened sequence of candidate lookup keys.
+        
+        If `key` is a tuple, yields all candidates produced by applying the superclass's
+        `_get_keys` to each element of the tuple in order (flattened). If `key` is not a
+        tuple, delegates to and returns the result of the superclass's `_get_keys`.
+        
         Parameters:
-            key: The lookup key or a tuple of lookup keys.
-
+            key: A lookup key or a tuple of lookup keys.
+        
         Returns:
-            An iterable of candidate keys to try for dictionary lookup.
+            An iterable of candidate keys to attempt for dictionary lookup.
         """
         if isinstance(key, tuple):
             return concat_map(super()._get_keys, key)
         return super()._get_keys(key)
 
     def _set_key(self, key) -> object:
-        """@coderabbitai generate docstrings"""
+        """
+        Return the key to use when storing a mapping.
+        
+        If `key` is a non-empty tuple, the first element of the tuple is used as the storage key.
+        Otherwise, the decision is delegated to `super()._set_key(key)`.
+        
+        Parameters:
+            key: The original key provided for insertion; may be any object or a tuple.
+        
+        Returns:
+            The key that should be used to store the value in the underlying mapping.
+        """
         if isinstance(key, tuple) and key:
             return key[0]
         return super()._set_key(key)
@@ -173,18 +195,14 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
     def _get_keys(self, key):
         """
-        Yield candidate lookup keys for a lookup key.
-
-        Always yields the candidates produced by super()._get_keys(key). If key is not a type,
-        also yields the candidates produced by super()._get_keys(type(key)) so lookups will
-        fall back to the key's type (and its MRO) after the original candidates.
-
+        Yield candidate lookup keys for the given lookup key, including a fallback to the key's type.
+        
+        This yields all candidates from super()._get_keys(key) first. If `key` is not a type, it then yields
+        candidates from super()._get_keys(type(key)), allowing lookups to fall back to the key's type and
+        its MRO-derived candidates after the original candidates.
+        
         Parameters:
-            key: The lookup key. Non-type keys cause an additional sequence of candidate keys
-                 derived from type(key).
-
-        Yields:
-            Candidate keys (types or other lookup keys) in the order they should be tried.
+            key: The lookup key. Non-type keys cause an additional sequence of candidate keys derived from type(key).
         """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
