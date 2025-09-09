@@ -160,8 +160,6 @@ class InheritanceDict(BaseDict):
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
 
-    pass
-
 
 class TypeConvertingInheritanceDict(InheritanceDict):
     """
@@ -188,5 +186,3 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
-
-    pass
