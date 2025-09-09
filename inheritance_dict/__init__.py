@@ -2,23 +2,15 @@
 The module defines an InheritanceDict, which is a dictionary, but for lookups where the key is a
 type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
-
 from collections.abc import Iterable
-
-__all__ = [
-    "concatMap",
-    "BaseDict",
-    "FallbackMixin",
-    "InheritanceDict",
-    "FallbackInheritanceDict",
-    "TypeConvertingInheritanceDict",
-    "FallbackTypeConvertingInheritanceDict",
-]
-
+__all__ = ['concatMap', 'BaseDict', 'FallbackMixin', 'InheritanceDict',
+    'FallbackInheritanceDict', 'TypeConvertingInheritanceDict',
+    'FallbackTypeConvertingInheritanceDict']
 MISSING = object()
 
 
 def concatMap(func, items):
+    """@coderabbitai generate docstrings"""
     for item in items:
         yield from func(item)
 
@@ -30,7 +22,7 @@ class BaseDict(dict):
     type.
     """
 
-    def _get_keys(self, key) -> Iterable[object]:
+    def _get_keys(self, key) ->Iterable[object]:
         """
         Yield lookup candidate keys.
 
@@ -38,7 +30,7 @@ class BaseDict(dict):
         order; otherwise yields the key itself. Used to produce the sequence of keys to try for
         dictionary lookups that support type-based inheritance resolution.
         """
-        return (key,)
+        return key,
 
     def __getitem__(self, key):
         """
@@ -100,18 +92,23 @@ class BaseDict(dict):
         Returns:
             str: The formatted representation.
         """
-        return f"{type(self).__name__}({super().__repr__()})"
+        return f'{type(self).__name__}({super().__repr__()})'
 
 
 class FallbackMixin:
-    def _get_keys(self, key) -> Iterable[object]:
+    """@coderabbitai generate docstrings"""
+
+    def _get_keys(self, key) ->Iterable[object]:
+        """@coderabbitai generate docstrings"""
         if isinstance(key, tuple):
             return concatMap(super()._get_keys, key)
         return super()._get_keys(key)
 
 
 class InheritanceDict(BaseDict):
-    def _get_keys(self, key) -> Iterable[object]:
+    """@coderabbitai generate docstrings"""
+
+    def _get_keys(self, key) ->Iterable[object]:
         """
         Yield lookup candidate keys.
 
@@ -125,6 +122,7 @@ class InheritanceDict(BaseDict):
 
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
+    """@coderabbitai generate docstrings"""
     pass
 
 
@@ -156,4 +154,5 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
+    """@coderabbitai generate docstrings"""
     pass
