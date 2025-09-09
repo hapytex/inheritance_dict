@@ -21,7 +21,9 @@ def concat_map(func, items):
     """
     Yield items from the iterables produced by applying func to each element of items.
 
-    func should be a callable that accepts a single item and returns an iterable; concat_map lazily iterates over items, calls func(item) for each, and yields each element from the resulting iterable in order.
+    func should be a callable that accepts a single item and returns an iterable; concat_map
+    lazily iterates over items, calls func(item) for each, and yields each element from the
+    resulting iterable in order.
     """
     for item in items:
         yield from func(item)
@@ -38,12 +40,13 @@ class BaseDict(dict):
         """
         Return an iterable of candidate lookup keys for dictionary lookup.
 
-        This default implementation yields only the original `key`. Subclasses (e.g., those that perform
-        Method Resolution Order or tuple-based fallback lookups) should override this to produce additional
-        candidate keys to try in order.
+        This default implementation yields only the original `key`. Subclasses (e.g., those that
+        perform Method Resolution Order or tuple-based fallback lookups) should override this to
+        produce additional candidate keys to try in order.
 
         Returns:
-            Iterable[object]: An iterable yielding candidate keys; by default a single-item tuple containing `key`.
+            Iterable[object]: An iterable yielding candidate keys; by default a single-item tuple
+                              containing `key`.
         """
         return (key,)
 
@@ -55,7 +58,8 @@ class BaseDict(dict):
         """
         Return the value mapped to `key` by trying candidate lookup keys produced by `_get_keys`.
 
-        This performs lookups in the order produced by `self._get_keys(key)` and returns the first mapped value found. If no candidate is present in the mapping a `KeyError` is raised.
+        This performs lookups in the order produced by `self._get_keys(key)` and returns the first
+        mapped value found. If no candidate is present in the mapping a `KeyError` is raised.
         """
         for item in self._get_keys(key):
             result = super().get(item, MISSING)
@@ -171,10 +175,13 @@ class TypeConvertingInheritanceDict(InheritanceDict):
         """
         Yield candidate lookup keys for a lookup key.
 
-        Always yields the candidates produced by super()._get_keys(key). If key is not a type, also yields the candidates produced by super()._get_keys(type(key)) so lookups will fall back to the key's type (and its MRO) after the original candidates.
+        Always yields the candidates produced by super()._get_keys(key). If key is not a type,
+        also yields the candidates produced by super()._get_keys(type(key)) so lookups will
+        fall back to the key's type (and its MRO) after the original candidates.
 
         Parameters:
-            key: The lookup key. Non-type keys cause an additional sequence of candidate keys derived from type(key).
+            key: The lookup key. Non-type keys cause an additional sequence of candidate keys
+                 derived from type(key).
 
         Yields:
             Candidate keys (types or other lookup keys) in the order they should be tried.
