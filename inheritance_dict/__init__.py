@@ -51,7 +51,6 @@ class BaseDict(dict):
         """@coderabbitai generate docstrings"""
         return key
 
-
     def __getitem__(self, key):
         """
         Return the value mapped to `key` by trying candidate lookup keys produced by `_get_keys`.
@@ -113,7 +112,7 @@ class BaseDict(dict):
         return f"{type(self).__name__}({super().__repr__()})"
 
 
-class FallbackMixin:   # pylint: disable=too-few-public-methods
+class FallbackMixin:  # pylint: disable=too-few-public-methods
     """@coderabbitai generate docstrings"""
 
     def _get_keys(self, key) -> Iterable[object]:
@@ -160,6 +159,7 @@ class InheritanceDict(BaseDict):
 
 class FallbackInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
+
     pass
 
 
@@ -188,4 +188,5 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
 class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
     """@coderabbitai generate docstrings"""
+
     pass
