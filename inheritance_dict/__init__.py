@@ -5,13 +5,31 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 
 from collections.abc import Iterable
 
-
-__all__ = ["InheritanceDict", "TypeConvertingInheritanceDict"]
-
+__all__ = [
+    "concat_map",
+    "BaseDict",
+    "FallbackMixin",
+    "InheritanceDict",
+    "FallbackInheritanceDict",
+    "TypeConvertingInheritanceDict",
+    "FallbackTypeConvertingInheritanceDict",
+]
 MISSING = object()
 
 
-class InheritanceDict(dict):
+def concat_map(func, items):
+    """
+    Yield items from the iterables produced by applying func to each element of items.
+
+    func should be a callable that accepts a single item and returns an iterable; concat_map
+    lazily iterates over items, calls func(item) for each, and yields each element from the
+    resulting iterable in order.
+    """
+    for item in items:
+        yield from func(item)
+
+
+class BaseDict(dict):
     """
     A dictionary that for type lookups, will walk over the Method Resolution Order (MRO) of that
     type, to find the value for the most specific superclass (including the class itself) of that
@@ -20,23 +38,37 @@ class InheritanceDict(dict):
 
     def _get_keys(self, key) -> Iterable[object]:
         """
-        Yield lookup candidate keys.
+        Return an iterable of candidate lookup keys for dictionary lookup.
 
-        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
-        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
-        dictionary lookups that support type-based inheritance resolution.
+        This default implementation yields only the original `key`. Subclasses (e.g., those that
+        perform Method Resolution Order or tuple-based fallback lookups) should override this to
+        produce additional candidate keys to try in order.
+
+        Returns:
+            Iterable[object]: An iterable yielding candidate keys; by default a single-item tuple
+                              containing `key`.
         """
-        if isinstance(key, type):
-            return key.__mro__
         return (key,)
+
+    def _set_key(self, key) -> object:
+        """
+        Return the key that should be used to store a value.
+
+        Default implementation returns the original key unchanged (identity). Subclasses may
+        override to normalize or map composite keys (for example, using the first element of a
+        tuple) or otherwise transform the provided key before insertion.
+
+        Returns:
+            The key to use when writing into the underlying mapping (usually the input `key`).
+        """
+        return key
 
     def __getitem__(self, key):
         """
-        Return the value for `key`, using type inheritance when appropriate.
+        Return the value mapped to `key` by trying candidate lookup keys produced by `_get_keys`.
 
-        If `key` is a type, this performs lookups in the key's MRO (key.__mro__) in order and
-        returns the first mapped value found. If `key` is not a type, it performs a direct lookup
-        using `key`. Raises KeyError if no matching mapping exists.
+        This performs lookups in the order produced by `self._get_keys(key)` and returns the first
+        mapped value found. If no candidate is present in the mapping a `KeyError` is raised.
         """
         for item in self._get_keys(key):
             result = super().get(item, MISSING)
@@ -76,7 +108,7 @@ class InheritanceDict(dict):
         try:
             return self[key]
         except KeyError:
-            self[key] = default
+            self[self._set_key(key)] = default
             return default
 
     def __repr__(self):
@@ -93,6 +125,75 @@ class InheritanceDict(dict):
         return f"{type(self).__name__}({super().__repr__()})"
 
 
+class FallbackMixin:  # pylint: disable=too-few-public-methods
+    """
+    A mixin that can be added to subclasses of BaseDict: it allows to make lookups with
+    a tuple of items, like:
+
+        mydict[float, int]
+
+    It will try to lookup keys until one of the items is a hit, or raises a KeyError if
+    none result in a hit.
+    """
+
+    def _get_keys(self, key) -> Iterable[object]:
+        """
+        Return an iterable of candidate lookup keys, expanding tuple keys by concatenating
+        the candidate sequences for each element.
+
+        If `key` is a tuple, yields all items produced by applying the superclass's
+        `_get_keys` to each element of the tuple (flattened in element order). If `key`
+        is not a tuple, delegates to the superclass's `_get_keys`.
+
+        Parameters:
+            key: The lookup key or a tuple of lookup keys.
+
+        Returns:
+            An iterable of candidate keys to try for dictionary lookup.
+        """
+        if isinstance(key, tuple):
+            return concat_map(super()._get_keys, key)
+        return super()._get_keys(key)
+
+    def _set_key(self, key) -> object:
+        """
+        If the key is a tuple, return the first item of the tuple, such that
+
+            mydict.setdefault((float, int), 1)
+
+        will assign the value to float, not (float, int)
+        """
+        if isinstance(key, tuple) and key:
+            return key[0]
+        return super()._set_key(key)
+
+
+class InheritanceDict(BaseDict):
+    """
+    A dictionary where lookups for a given type will result in a lookup for the entire method-
+    resolution order of the type, until a superclass is a hit.
+    """
+
+    def _get_keys(self, key) -> Iterable[object]:
+        """
+        Yield lookup candidate keys.
+
+        If `key` is a type, yields the classes in its method-resolution order (key.__mro__) in
+        order; otherwise yields the key itself. Used to produce the sequence of keys to try for
+        dictionary lookups that support type-based inheritance resolution.
+        """
+        if isinstance(key, type):
+            return concat_map(super()._get_keys, key.__mro__)
+        return super()._get_keys(key)
+
+
+class FallbackInheritanceDict(FallbackMixin, BaseDict):
+    """
+    A variant of the InheritanceDict where one can use a tuple of multiple keys. Each key can
+    result in extra lookups like MRO for type lookups.
+    """
+
+
 class TypeConvertingInheritanceDict(InheritanceDict):
     """
     A variant of InheritanceDict that, on a missing direct lookup for non-type keys,
@@ -101,20 +202,26 @@ class TypeConvertingInheritanceDict(InheritanceDict):
 
     def _get_keys(self, key):
         """
-        Yield candidate lookup keys for a given key, extending the base behavior by including the
-        key's type MRO for non-type keys.
+        Yield candidate lookup keys for a lookup key.
 
-        For non-type keys, yields the candidates produced by the superclass
-        (_e.g., the key itself_), followed by the method resolution order (MRO) of type(key).
-        For keys that are types, yields only the superclass candidates (typically the type's MRO).
+        Always yields the candidates produced by super()._get_keys(key). If key is not a type,
+        also yields the candidates produced by super()._get_keys(type(key)) so lookups will
+        fall back to the key's type (and its MRO) after the original candidates.
 
         Parameters:
-            key: The lookup key. If `key` is not a `type`, this generator will include the MRO of
-            `type(key)` after the superclass candidates.
+            key: The lookup key. Non-type keys cause an additional sequence of candidate keys
+                 derived from type(key).
 
         Yields:
-            Candidate keys (types or other keys) in the order they should be tried for lookup.
+            Candidate keys (types or other lookup keys) in the order they should be tried.
         """
         yield from super()._get_keys(key)
         if not isinstance(key, type):
-            yield from type(key).__mro__
+            yield from super()._get_keys(type(key))
+
+
+class FallbackTypeConvertingInheritanceDict(FallbackMixin, BaseDict):
+    """
+    A variant of TypeConvertingInheritanceDict where one can pass a tuple of multple
+    keys. The keys are tried one after another, and some keys can trigger MRO lookups.
+    """

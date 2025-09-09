@@ -1,7 +1,11 @@
 import unittest
 from datetime import date, datetime, time, timedelta
 
-from inheritance_dict import InheritanceDict, TypeConvertingInheritanceDict
+from inheritance_dict import (
+    FallbackInheritanceDict,
+    InheritanceDict,
+    TypeConvertingInheritanceDict,
+)
 
 
 class A(str):
@@ -12,17 +16,21 @@ class TypeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Prepare shared InheritanceDict fixtures for the test class.
+        Create shared class-level dictionary fixtures used by the tests.
 
-        Creates two class-level InheritanceDict instances:
-        - inheritance_dict: mapping object->1, int->2, str->3, "a"->4
-        - inheritance_dict2: mapping int->2, str->3, "a"->4
+        Sets up five fixtures on the test class:
+        - inheritance_dict: InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
+        - inheritance_dict2: InheritanceDict({int: 2, str: 3, "a": 4})
+        - inheritance_dict3: FallbackInheritanceDict({int: 2, str: 3, "a": 4})
+        - type_converting_inheritance_dict: TypeConvertingInheritanceDict({object: 1, int: 2, str: 3, "a": 4})
+        - type_converting_inheritance_dict2: TypeConvertingInheritanceDict({int: 2, str: 3, "a": 4})
 
-        These fixtures are used by the tests to verify exact-type lookups and MRO-based resolution.
+        These fixtures are reused across tests to verify exact-type lookups, MRO-based resolution, tuple-key fallbacks, and type-converting behavior.
         """
         super().setUpClass()
         cls.inheritance_dict = InheritanceDict({object: 1, int: 2, str: 3, "a": 4})
         cls.inheritance_dict2 = InheritanceDict({int: 2, str: 3, "a": 4})
+        cls.inheritance_dict3 = FallbackInheritanceDict({int: 2, str: 3, "a": 4})
         cls.type_converting_inheritance_dict = TypeConvertingInheritanceDict(
             {object: 1, int: 2, str: 3, "a": 4}
         )
@@ -55,6 +63,12 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.inheritance_dict2.get(int))
         self.assertEqual(3, self.inheritance_dict2.get(str))
         self.assertEqual(4, self.inheritance_dict2.get("a"))
+        self.assertEqual(2, self.inheritance_dict3[int])
+        self.assertEqual(3, self.inheritance_dict3[str])
+        self.assertEqual(4, self.inheritance_dict3["a"])
+        self.assertEqual(2, self.inheritance_dict3.get(int))
+        self.assertEqual(3, self.inheritance_dict3.get(str))
+        self.assertEqual(4, self.inheritance_dict3.get("a"))
         self.assertEqual(1, self.type_converting_inheritance_dict[object])
         self.assertEqual(2, self.type_converting_inheritance_dict[int])
         self.assertEqual(3, self.type_converting_inheritance_dict[str])
@@ -69,6 +83,14 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.type_converting_inheritance_dict2.get(int))
         self.assertEqual(3, self.type_converting_inheritance_dict2.get(str))
         self.assertEqual(4, self.type_converting_inheritance_dict2.get("a"))
+
+    def test_fallback(self):
+        self.assertEqual(2, self.inheritance_dict3[int, str])
+        self.assertEqual(3, self.inheritance_dict3[str, complex])
+        self.assertEqual(4, self.inheritance_dict3["a", int])
+        self.assertEqual(2, self.inheritance_dict3.get((int, str)))
+        self.assertEqual(3, self.inheritance_dict3.get((str, complex)))
+        self.assertEqual(4, self.inheritance_dict3.get(("a", int)))
 
     def test_mro_walk(self):
         """
@@ -181,6 +203,13 @@ class TypeTest(unittest.TestCase):
         self.assertEqual(2, self.type_converting_inheritance_dict2.setdefault(bool, 5))
         self.assertEqual(5, self.type_converting_inheritance_dict2.setdefault(float, 6))
         self.assertEqual(4, len(self.type_converting_inheritance_dict2))
+
+        self.assertEqual(2, self.inheritance_dict3.setdefault((float, int), 6))
+        self.assertEqual(3, len(self.inheritance_dict3))
+        self.assertEqual(6, self.inheritance_dict3.setdefault((float, complex), 6))
+        self.assertEqual(4, len(self.inheritance_dict3))
+        self.assertEqual(6, self.inheritance_dict3.setdefault(float, 7))
+        self.assertEqual(8, self.inheritance_dict3.setdefault(complex, 8))
 
     def test_repr(self):
         self.assertEqual("InheritanceDict({})", repr(InheritanceDict({})))
