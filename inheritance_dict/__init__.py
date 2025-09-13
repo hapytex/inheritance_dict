@@ -4,7 +4,7 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
 
 from collections.abc import Callable, Iterable
-from typing import Generator, TypeVar
+from typing import TypeVar
 
 __all__ = [
     "concat_map",
@@ -21,7 +21,7 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
-def concat_map(func: Callable[[T], Iterable[U]], items: Iterable[T]) -> Generator[U]:
+def concat_map(func: Callable[[T], Iterable[U]], items: Iterable[T]) -> Iterable[U]:
     """
     Yield items from the iterables produced by applying func to each element of items.
 
