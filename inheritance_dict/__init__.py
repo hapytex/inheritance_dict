@@ -3,7 +3,8 @@ The module defines an InheritanceDict, which is a dictionary, but for lookups wh
 type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from typing import TypeVar
 
 __all__ = [
     "concat_map",
@@ -16,8 +17,11 @@ __all__ = [
 ]
 MISSING = object()
 
+T = TypeVar("T")
+U = TypeVar("U")
 
-def concat_map(func, items):
+
+def concat_map(func: Callable[[T], Iterable[U]], items: Iterable[T]) -> Iterable[U]:
     """
     Yield items from the iterables produced by applying func to each element of items.
 
@@ -36,7 +40,7 @@ class BaseDict(dict):
     type.
     """
 
-    def _get_keys(self, key) -> Iterable[object]:
+    def _get_keys(self, key: object) -> Iterable[object]:
         """
         Return an iterable of candidate lookup keys for dictionary lookup.
 
@@ -50,7 +54,7 @@ class BaseDict(dict):
         """
         return (key,)
 
-    def _set_key(self, key) -> object:
+    def _set_key(self, key: object) -> object:
         """
         Return the key that should be used to store a value.
 
@@ -63,7 +67,7 @@ class BaseDict(dict):
         """
         return key
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: object) -> object:
         """
         Return the value mapped to `key` by trying candidate lookup keys produced by `_get_keys`.
 
@@ -76,7 +80,7 @@ class BaseDict(dict):
                 return result
         raise KeyError(key)
 
-    def get(self, key, default=None):
+    def get(self, key: object, default: object = None) -> object:
         """
         Return the value mapped to `key` or `default` if no mapping exists.
 
@@ -89,7 +93,7 @@ class BaseDict(dict):
         except KeyError:
             return default
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key: object, default: object = None) -> object:
         """
         Return the value for `key` if present; otherwise insert `default` for `key` and return it.
 
@@ -111,7 +115,7 @@ class BaseDict(dict):
             self[self._set_key(key)] = default
             return default
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a canonical string representation of the mapping.
 
@@ -136,7 +140,7 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
     none result in a hit.
     """
 
-    def _get_keys(self, key) -> Iterable[object]:
+    def _get_keys(self, key: object) -> Iterable[object]:
         """
         Return an iterable of candidate lookup keys, expanding tuple keys by concatenating
         the candidate sequences for each element.
@@ -155,7 +159,7 @@ class FallbackMixin:  # pylint: disable=too-few-public-methods
             return concat_map(super()._get_keys, key)
         return super()._get_keys(key)
 
-    def _set_key(self, key) -> object:
+    def _set_key(self, key: object) -> object:
         """
         If the key is a tuple, return the first item of the tuple, such that
 
@@ -174,7 +178,7 @@ class InheritanceDict(BaseDict):
     resolution order of the type, until a superclass is a hit.
     """
 
-    def _get_keys(self, key) -> Iterable[object]:
+    def _get_keys(self, key: object) -> Iterable[object]:
         """
         Yield lookup candidate keys.
 
@@ -200,7 +204,7 @@ class TypeConvertingInheritanceDict(InheritanceDict):
     retries the lookup using the key's type and resolves via that type's MRO.
     """
 
-    def _get_keys(self, key):
+    def _get_keys(self, key: object) -> Iterable[object]:
         """
         Yield candidate lookup keys for a lookup key.
 
