@@ -4,7 +4,7 @@ type, it will walk over the Method Resolution Order (MRO) looking for a value.
 """
 
 from collections.abc import Callable, Iterable
-from typing import Callable, Generator, TypeVar
+from typing import Generator, TypeVar
 
 __all__ = [
     "concat_map",
