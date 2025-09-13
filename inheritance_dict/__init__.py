@@ -17,8 +17,8 @@ __all__ = [
 ]
 MISSING = object()
 
-T = TypeVar('T')
-U = TypeVar('U')
+T = TypeVar("T")
+U = TypeVar("U")
 
 
 def concat_map(func: Callable[[T], Iterable[U]], items: Iterable[T]) -> Generator[U]:
@@ -80,7 +80,7 @@ class BaseDict(dict):
                 return result
         raise KeyError(key)
 
-    def get(self, key: object, default: object=None) -> object:
+    def get(self, key: object, default: object = None) -> object:
         """
         Return the value mapped to `key` or `default` if no mapping exists.
 
@@ -93,7 +93,7 @@ class BaseDict(dict):
         except KeyError:
             return default
 
-    def setdefault(self, key: object, default: object=None) -> object:
+    def setdefault(self, key: object, default: object = None) -> object:
         """
         Return the value for `key` if present; otherwise insert `default` for `key` and return it.
 
